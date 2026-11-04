@@ -5,6 +5,9 @@ select set_config('casebook.test_user', gen_random_uuid()::text, true);
 insert into auth.users(id,aud,role,email)
 values(current_setting('casebook.test_user')::uuid,'authenticated','authenticated',
  'approval-test-' || current_setting('casebook.test_user') || '@example.invalid');
+select set_config('casebook.test_session',gen_random_uuid()::text,true);
+insert into auth.sessions(id,user_id,created_at,updated_at) values(current_setting('casebook.test_session')::uuid,current_setting('casebook.test_user')::uuid,now(),now());
+select set_config('request.jwt.claims',json_build_object('sub',current_setting('casebook.test_user'),'session_id',current_setting('casebook.test_session'),'role','authenticated')::text,true);
 set local role authenticated;
 select set_config('request.jwt.claim.sub',current_setting('casebook.test_user'),true);
 do $$

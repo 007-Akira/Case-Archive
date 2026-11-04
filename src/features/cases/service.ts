@@ -106,8 +106,14 @@ export async function favoriteCase(id: string, value: boolean) {
   if (error) throw error;
 }
 export async function deleteCase(id: string) {
-  const { error } = await db().from("cases").delete().eq("id", id);
+  const { data, error } = await db()
+    .from("cases")
+    .delete()
+    .eq("id", id)
+    .select("id");
   if (error) throw error;
+  if (data?.length !== 1)
+    throw new Error("Case unavailable or deletion was not permitted.");
 }
 export async function allCases() {
   const result: CaseRecord[] = [];

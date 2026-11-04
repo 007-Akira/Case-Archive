@@ -87,8 +87,13 @@ it("updates a favorite by case identity", async () => {
   expect(mock.eq).toHaveBeenCalledWith("id", "case-id");
 });
 it("deletes the requested case", async () => {
-  mock.eq.mockResolvedValue({ error: null });
+  mock.select.mockResolvedValue({ data: [{ id: "case-id" }], error: null });
   await deleteCase("case-id");
   expect(mock.delete).toHaveBeenCalled();
   expect(mock.eq).toHaveBeenCalledWith("id", "case-id");
+});
+
+it("does not report deletion when the database returned no owned row", async () => {
+  mock.select.mockResolvedValue({ data: [], error: null });
+  await expect(deleteCase("missing")).rejects.toThrow("Case unavailable");
 });

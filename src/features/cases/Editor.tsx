@@ -24,6 +24,7 @@ import {
 } from "./model";
 import { getCase, saveCase } from "./service";
 import { useAutosave } from "./useAutosave";
+import { DeleteCaseButton } from "../../components/DeleteCase";
 import { Dialog } from "../../components/ui/dialog";
 export function EditorPage() {
   const { id } = useParams();
@@ -64,7 +65,7 @@ function CaseEditor({ record }: { record?: CaseRecord }) {
     name: "differential_diagnoses",
   });
   const status = record?.status ?? "draft";
-  const { state, dirty, flush } = useAutosave(
+  const { state, dirty, flush, pause, resume } = useAutosave(
     values,
     !completed,
     async (snapshot) => {
@@ -153,6 +154,19 @@ function CaseEditor({ record }: { record?: CaseRecord }) {
         Use de-identified aliases. Remove identifying information from all
         notes; an alias alone does not ensure de-identification.
       </p>
+      {record && (
+        <div className="editor-delete">
+          <DeleteCaseButton
+            record={record}
+            beforeDelete={pause}
+            onFailed={resume}
+            onDeleted={() => {
+              allowNavigation.current = true;
+              navigate("/cases");
+            }}
+          />
+        </div>
+      )}
       <div className="form-layout">
         <nav className="stepper" aria-label="Case sections">
           {sections.map(([name], i) => (

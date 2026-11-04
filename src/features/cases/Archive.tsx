@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Search, SlidersHorizontal, Plus } from "lucide-react";
 import { defaultFilters, listCases, PAGE_SIZE } from "./service";
 import { Dialog } from "../../components/ui/dialog";
@@ -22,6 +22,7 @@ export function ArchivePage() {
   const result = useQuery({
     queryKey: ["cases", "archive", filters, page],
     queryFn: () => listCases(filters, page),
+    placeholderData: keepPreviousData,
   });
   return (
     <div className="page">

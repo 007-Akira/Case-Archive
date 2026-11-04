@@ -59,3 +59,11 @@ At the user’s request, removed Google OAuth UI, provider checks and related se
 - Added optional Turnstile login/recovery integration; no site key or server CAPTCHA configuration is assumed.
 - Applied and directly tested the five-attempt/15-minute password-verification hook, including expiry and no browser execution permissions. Supabase Auth hook activation remains pending; this is not represented as active brute-force protection.
 - See SECURITY.md for the exact remaining project settings and launch boundaries.
+
+## Password visibility, seven-day sessions and deletion — 4 November 2026
+
+- Applied the seven-day session migration. Rollback-only database verification passed: an approved fresh session can use the archive; the same session with creation older than seven days cannot read or insert cases, even with current JWT claims. Temporary records were rolled back.
+- Added accessible password visibility controls, shared case/draft deletion confirmation, deletion row confirmation, and safe autosave pause/settle during editor deletion.
+- Added session cutoff, expired cached login, confirmation/cancel/retry, password-toggle, and autosave/delete concurrency coverage.
+
+- Final verification: 38 unit/component tests passed; strict TypeScript and production build passed; all eight live browser scenarios passed sequentially at 320, 390, 768 and 1440px. Live API isolation/concurrent-numbering checks also passed after session-policy application. Integration scenarios sharing one disposable account run sequentially to avoid cross-scenario authentication interference.

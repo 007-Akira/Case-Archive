@@ -1,6 +1,8 @@
 import { defineConfig } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests/e2e",
+  // Live scenarios share one disposable account; avoid cross-scenario auth interference.
+  workers: process.env.E2E_EMAIL ? 1 : undefined,
   use: { baseURL: "http://127.0.0.1:5173" },
   webServer: {
     env:

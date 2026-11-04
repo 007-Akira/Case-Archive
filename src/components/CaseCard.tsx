@@ -9,6 +9,7 @@ import {
   dateOf,
 } from "../features/cases/model";
 import { favoriteCase } from "../features/cases/service";
+import { DeleteCaseButton } from "./DeleteCase";
 export function CaseCard({
   c,
   compact = false,
@@ -19,39 +20,48 @@ export function CaseCard({
   const client = useQueryClient();
   if (compact)
     return (
-      <Link
-        className="compact-case"
-        to={c.status === "draft" ? `/cases/${c.id}/edit` : `/cases/${c.id}`}
-      >
-        <div className="row">
-          <h3>{titleOf(c)}</h3>
-          <span className={`badge ${c.status}`}>{c.status}</span>
-        </div>
-        <p className="small muted">
-          {numberOf(c.case_number)} · {c.age !== null ? `${c.age} · ` : ""}
-          {c.department || "No department"} · Updated {dateOf(c.updated_at)}
-        </p>
-      </Link>
+      <article className="compact-case">
+        <Link
+          className="compact-case-link"
+          to={c.status === "draft" ? `/cases/${c.id}/edit` : `/cases/${c.id}`}
+        >
+          <div className="row">
+            <h3>{titleOf(c)}</h3>
+            <span className={`badge ${c.status}`}>{c.status}</span>
+          </div>
+          <p className="small muted">
+            {numberOf(c.case_number)} · {c.age !== null ? `${c.age} · ` : ""}
+            {c.department || "No department"} · Updated {dateOf(c.updated_at)}
+          </p>
+        </Link>
+        <DeleteCaseButton record={c} iconOnly />
+      </article>
     );
   return (
     <article className="case-card">
       <div className="row">
         <span className="mono">{numberOf(c.case_number)}</span>
-        <button
-          className="icon-button"
-          aria-label={c.is_favorite ? "Remove favorite" : "Add favorite"}
-          aria-pressed={c.is_favorite}
-          onClick={async () => {
-            try {
-              await favoriteCase(c.id, !c.is_favorite);
-              await client.invalidateQueries({ queryKey: ["cases"] });
-            } catch {
-              toast.error("Could not update favorite.");
-            }
-          }}
-        >
-          <Bookmark size={18} fill={c.is_favorite ? "currentColor" : "none"} />
-        </button>
+        <span className="case-card-actions">
+          <DeleteCaseButton record={c} iconOnly />
+          <button
+            className="icon-button"
+            aria-label={c.is_favorite ? "Remove favorite" : "Add favorite"}
+            aria-pressed={c.is_favorite}
+            onClick={async () => {
+              try {
+                await favoriteCase(c.id, !c.is_favorite);
+                await client.invalidateQueries({ queryKey: ["cases"] });
+              } catch {
+                toast.error("Could not update favorite.");
+              }
+            }}
+          >
+            <Bookmark
+              size={18}
+              fill={c.is_favorite ? "currentColor" : "none"}
+            />
+          </button>
+        </span>
       </div>
       <Link
         className="case-link"

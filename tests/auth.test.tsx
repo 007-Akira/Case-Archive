@@ -6,9 +6,10 @@ import {
   cleanup,
 } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
-import { afterEach, it, expect, vi } from "vitest";
+import { afterEach, beforeEach, it, expect, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const auth = vi.hoisted(() => ({
+  signOut: vi.fn().mockResolvedValue({ error: null }),
   getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
   onAuthStateChange: vi.fn(() => ({
     data: { subscription: { unsubscribe: vi.fn() } },
@@ -19,10 +20,11 @@ const auth = vi.hoisted(() => ({
   updateUser: vi.fn().mockResolvedValue({ error: null }),
   resetPasswordForEmail: vi.fn().mockResolvedValue({ error: null }),
 }));
+const rpc = vi.hoisted(() => vi.fn());
 vi.mock("../src/lib/supabase/client", () => ({
   configured: true,
   supabase: { auth },
-  db: () => ({ auth }),
+  db: () => ({ auth, rpc }),
 }));
 import {
   AuthProvider,
@@ -30,6 +32,10 @@ import {
   ProtectedRoute,
 } from "../src/features/auth/Auth";
 afterEach(cleanup);
+beforeEach(() => {
+  vi.clearAllMocks();
+  auth.getSession.mockResolvedValue({ data: { session: null } });
+});
 function mount(path = "/login") {
   render(
     <QueryClientProvider client={new QueryClient()}>
@@ -129,4 +135,37 @@ it("updates the password through Supabase for a recovery form", async () => {
       password: "New-example-password1",
     }),
   );
+});
+
+it("toggles password visibility without submitting or losing the password", async () => {
+  mount();
+  const input = screen.getByLabelText("Password");
+  fireEvent.change(input, {
+    target: { value: "A password only for this test" },
+  });
+  expect(input).toHaveAttribute("type", "password");
+  fireEvent.click(screen.getByRole("button", { name: "Show password" }));
+  expect(input).toHaveAttribute("type", "text");
+  expect(input).toHaveValue("A password only for this test");
+  fireEvent.click(screen.getByRole("button", { name: "Hide password" }));
+  expect(input).toHaveAttribute("type", "password");
+});
+
+it("requires sign-in when a cached session has exceeded seven days", async () => {
+  auth.getSession.mockResolvedValueOnce({
+    data: { session: { user: { id: "test-owner" } } },
+  });
+  rpc.mockResolvedValueOnce({
+    data: {
+      approved: false,
+      expires_at: new Date(Date.now() - 1000).toISOString(),
+    },
+    error: null,
+  });
+  mount("/");
+  expect(await screen.findByText("Welcome back.")).toBeInTheDocument();
+  await waitFor(() =>
+    expect(auth.signOut).toHaveBeenCalledWith({ scope: "local" }),
+  );
+  expect(screen.queryByText("Private workspace")).not.toBeInTheDocument();
 });

@@ -86,3 +86,38 @@ it("does not claim a new empty case is saved before persistence", async () => {
   expect(write).toHaveBeenCalledWith({ note: "" });
   expect(hook.result.current.state).toBe("Saved");
 });
+
+it("waits for an in-flight save before deletion and prevents later saves from recreating it", async () => {
+  let resolve!: () => void;
+  const write = vi
+    .fn()
+    .mockImplementationOnce(() => new Promise<void>((r) => (resolve = r)))
+    .mockResolvedValue(undefined);
+  const hook = renderHook(({ note }) => useAutosave({ note }, true, write), {
+    initialProps: { note: "" },
+  });
+  hook.rerender({ note: "old" });
+  let saving!: Promise<boolean>;
+  act(() => {
+    saving = hook.result.current.flush();
+  });
+  hook.rerender({ note: "new" });
+  let settled = false;
+  let pausing!: Promise<void>;
+  act(() => {
+    pausing = hook.result.current.pause().then(() => {
+      settled = true;
+    });
+  });
+  expect(settled).toBe(false);
+  await act(async () => {
+    resolve();
+    await saving;
+    await pausing;
+  });
+  expect(settled).toBe(true);
+  await act(async () => {
+    await hook.result.current.flush();
+  });
+  expect(write).toHaveBeenCalledTimes(1);
+});

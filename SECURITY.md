@@ -26,3 +26,7 @@ This is a test deployment, not a certification that attacks are impossible or a 
 ## Hosting
 
 Cloudflare is the preferred fit for the static Vite frontend. Supabase remains the authentication/data service on either Cloudflare or Vercel. `public/_headers`, `public/_redirects`, and `vercel.json` prepare both targets. A connected Sites private deployment is used for owner testing; it is not a deployment into the user's own Cloudflare account and is not automatically accessible to other people. A regular HTTPS host/domain is needed for the intended multi-user rollout.
+
+## Seven-day archive sessions
+
+The archive now enforces a seven-day absolute session limit through the authoritative Supabase session ID and creation time. Short JWT lifetimes remain in place. Revoked/missing or expired sessions cannot use the archive even if the browser attempts to retain or refresh tokens. Client expiry timers and focus checks clear the workspace and require reauthentication; a warning prompts users to save before the cutoff. This policy does not claim to alter Supabase project-wide Auth settings.

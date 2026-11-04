@@ -125,3 +125,58 @@ test("workspace layout, filter dialog, section navigation and logout with HTTP f
     page.getByRole("heading", { name: "Welcome back." }),
   ).toBeVisible();
 });
+
+test("password visibility, persisted login and confirmed draft deletion", async ({
+  page,
+}) => {
+  test.skip(
+    !process.env.E2E_EMAIL || !process.env.E2E_PASSWORD,
+    "Requires authorized test credentials",
+  );
+  await page.goto("/login");
+  await page.getByLabel("Email", { exact: true }).fill(process.env.E2E_EMAIL!);
+  const password = page.getByLabel("Password", { exact: true });
+  await password.fill(process.env.E2E_PASSWORD!);
+  await page
+    .getByRole("button", { name: "Show password", exact: true })
+    .click();
+  await expect(password).toHaveAttribute("type", "text");
+  await page
+    .getByRole("button", { name: "Hide password", exact: true })
+    .click();
+  await expect(password).toHaveAttribute("type", "password");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page.getByRole("heading", { name: /Hello/ })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("heading", { name: /Hello/ })).toBeVisible();
+  await page
+    .getByRole("link", { name: "New Case", exact: true })
+    .first()
+    .click();
+  const alias = `DELETE-${Date.now()}-${test.info().project.name}`;
+  await page.getByLabel("Patient alias", { exact: true }).fill(alias);
+  await page.getByRole("button", { name: "Save draft", exact: true }).click();
+  await expect(page.locator(".save-status")).toHaveText("Saved");
+  await page
+    .getByRole("link", { name: "My Cases", exact: true })
+    .first()
+    .click();
+  const searched = page.waitForResponse(
+    (r) =>
+      r.url().includes("/rest/v1/cases") &&
+      decodeURIComponent(r.url()).includes(alias),
+  );
+  await page.getByRole("textbox", { name: "Search archive" }).fill(alias);
+  await searched;
+  const card = page.locator("article.case-card").filter({ hasText: alias });
+  await expect(card).toHaveCount(1);
+  await card.getByRole("button", { name: "Delete draft", exact: true }).click();
+  await expect(page.getByRole("dialog")).toContainText("Delete this draft?");
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(card).toHaveCount(1);
+  await card.getByRole("button", { name: "Delete draft", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Delete permanently", exact: true })
+    .click();
+  await expect(card).toHaveCount(0);
+});

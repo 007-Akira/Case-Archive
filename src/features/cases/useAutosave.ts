@@ -14,6 +14,7 @@ export function useAutosave<T>(
   const writer = useRef(write);
   writer.current = write;
   const confirmed = useRef(serialized);
+  const paused = useRef(false);
   const pending = useRef<Promise<boolean> | null>(null);
   const savedEver = useRef(initiallySaved);
   const [state, setState] = useState<SaveState>(
@@ -28,12 +29,13 @@ export function useAutosave<T>(
     };
   }, []);
   const flush = useCallback(async (force = false): Promise<boolean> => {
+    if (paused.current) return false;
     if (pending.current) return pending.current;
     const work = async () => {
       let forceWrite = force;
       while (
-        forceWrite ||
-        JSON.stringify(latest.current) !== confirmed.current
+        !paused.current &&
+        (forceWrite || JSON.stringify(latest.current) !== confirmed.current)
       ) {
         forceWrite = false;
         const snapshot = latest.current;
@@ -51,6 +53,7 @@ export function useAutosave<T>(
           return false;
         }
       }
+      if (paused.current) return false;
       if (mounted.current) {
         setState("Saved");
         setDirty(false);
@@ -89,5 +92,13 @@ export function useAutosave<T>(
     window.addEventListener("beforeunload", before);
     return () => window.removeEventListener("beforeunload", before);
   }, []);
-  return { state, dirty, flush };
+  const pause = async () => {
+    paused.current = true;
+    await pending.current;
+  };
+  const resume = () => {
+    paused.current = false;
+    void flush();
+  };
+  return { state, dirty, flush, pause, resume };
 }

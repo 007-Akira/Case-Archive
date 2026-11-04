@@ -3,6 +3,7 @@ import {
   useContext,
   useEffect,
   useState,
+  useRef,
   type ReactNode,
 } from "react";
 import type { Session } from "@supabase/supabase-js";
@@ -14,6 +15,9 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { PasswordInput } from "../../components/ui/PasswordInput";
+import { toast } from "sonner";
+import { sessionExpired, type ArchiveSessionStatus } from "./session";
 import { Captcha, captchaConfigured } from "./Captcha";
 import { supabase, db, configured } from "../../lib/supabase/client";
 const Context = createContext<{
@@ -28,17 +32,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const client = useQueryClient();
+  const ownerId = useRef<string | null>(null);
   useEffect(() => {
     if (!supabase) {
       setLoading(false);
       return;
     }
     let live = true;
+    const acceptSession = (value: Session | null) => {
+      const nextOwner = value?.user.id ?? null;
+      if (ownerId.current !== nextOwner) {
+        client.clear();
+        ownerId.current = nextOwner;
+      }
+      setSession(value);
+    };
     supabase.auth
       .getSession()
       .then(({ data, error }) => {
         if (live) {
-          setSession(data.session);
+          acceptSession(data.session);
           setError(error?.message ?? "");
           setLoading(false);
         }
@@ -50,8 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       });
     const { data } = supabase.auth.onAuthStateChange((event, s) => {
-      client.clear();
-      setSession(s);
+      acceptSession(s);
       setLoading(false);
       if (event === "PASSWORD_RECOVERY")
         window.location.replace("/reset-password");
@@ -65,12 +77,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: ["archive-access", session?.user.id],
     enabled: Boolean(session),
     queryFn: async () => {
-      const { data, error } = await db().rpc("has_archive_access");
+      const { data, error } = await db().rpc("archive_session_status");
       if (error) throw error;
-      return data === true;
+      return data as ArchiveSessionStatus;
     },
     retry: 1,
+    refetchOnWindowFocus: true,
   });
+  const expiresAt = access.data?.expires_at;
+  useEffect(() => {
+    if (!session || !access.data) return;
+    const expire = () => {
+      if (sessionExpired(expiresAt ?? null)) {
+        setSession(null);
+        client.clear();
+        toast.message("Your session has ended. Sign in again.", {
+          id: "session-expired",
+        });
+        void supabase?.auth.signOut({ scope: "local" });
+      }
+    };
+    expire();
+    if (sessionExpired(expiresAt ?? null)) return;
+    const timer = setTimeout(
+      expire,
+      Math.max(0, Date.parse(expiresAt!) - Date.now()),
+    );
+    const warning = setTimeout(
+      () =>
+        toast.message(
+          "Your session expires soon. Save your work and sign in again.",
+          { id: "session-expiry-warning", duration: 15000 },
+        ),
+      Math.max(0, Date.parse(expiresAt!) - Date.now() - 5 * 60000),
+    );
+    const check = () => {
+      if (document.visibilityState === "visible") expire();
+    };
+    window.addEventListener("focus", expire);
+    document.addEventListener("visibilitychange", check);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(warning);
+      window.removeEventListener("focus", expire);
+      document.removeEventListener("visibilitychange", check);
+    };
+  }, [session, expiresAt, access.data, client]);
   return (
     <Context.Provider
       value={{
@@ -81,7 +133,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           (access.error
             ? "Unable to verify archive access. Please reload to retry."
             : ""),
-        approved: access.data === true,
+        approved:
+          access.data?.approved === true && !sessionExpired(expiresAt ?? null),
       }}
     >
       {children}
@@ -217,9 +270,8 @@ export function AuthPage() {
             {!forgot && (
               <label>
                 {reset ? "New password" : "Password"}
-                <input
+                <PasswordInput
                   name="password"
-                  type="password"
                   autoComplete={reset ? "new-password" : "current-password"}
                   minLength={reset ? 12 : 1}
                   required
@@ -229,9 +281,8 @@ export function AuthPage() {
             {reset && (
               <label>
                 Confirm password
-                <input
+                <PasswordInput
                   name="confirm"
-                  type="password"
                   autoComplete="new-password"
                   minLength={12}
                   required
@@ -269,6 +320,11 @@ export function AuthPage() {
         <Link to={forgot || reset ? "/login" : "/forgot-password"}>
           {forgot || reset ? "Back to sign in" : "Forgot password?"}
         </Link>
+        {!forgot && !reset && (
+          <p className="small muted">
+            Stay signed in for up to 7 days on this device.
+          </p>
+        )}
         <p className="small muted">
           Private, invite-only workspace. Contact your administrator for access.
         </p>

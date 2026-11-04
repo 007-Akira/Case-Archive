@@ -83,7 +83,7 @@ The PWA browser test runs against the production build and verifies manifest ico
 
 ## Approved accounts and password recovery
 
-Apply both SQL migrations in order. `202611040001_approved_archive_access.sql` adds a private, RLS-enabled membership table and restrictive policies. Its membership table starts empty: existing and newly created Auth accounts require explicit approval. Public signup, if accidentally left enabled, cannot grant archive access. The UI also checks approval through the non-enumerating `has_archive_access` RPC.
+Apply all SQL migrations in filename order. `202611040001_approved_archive_access.sql` adds a private, RLS-enabled membership table and restrictive policies. Its membership table starts empty: existing and newly created Auth accounts require explicit approval. Public signup, if accidentally left enabled, cannot grant archive access. The UI also checks approval through the non-enumerating `has_archive_access` RPC.
 
 For each person you authorize, first use Supabase Authentication → Users → Add user to create a confirmed email/password account. Then run this **admin-only SQL** in the dashboard, replacing the example address:
 
@@ -100,3 +100,11 @@ Login uses email and password only. Google OAuth is not enabled or required.
 The Forgot password flow is available to real-email accounts. Configure production SMTP and allow `http://localhost:5173/reset-password` (plus the deployed URL) in Supabase's redirects. Localhost links work only on the device running the app, so an externally accessible HTTPS deployment is needed for another person's recovery link. No recovery email is sent during provisioning. Email delivery requires dashboard configuration and have not been verified merely by creating an account.
 
 Gmail receives recovery emails for Gmail addresses; Casebook passwords remain separate from Google/Gmail passwords.
+
+## Seven-day sessions and deletion
+
+Sign-in persists through the Supabase session store for up to seven days from the session's original creation. Access tokens keep their short lifetime and refresh normally; refreshing does not restart the seven-day clock. `202611040003_seven_day_sessions.sql` checks the current JWT session ID against its own row in `auth.sessions`, and the archive's membership/RLS checks deny access after the cutoff or revocation. The app uses the server-reported expiry, warns before expiry, and requests sign-in again when it expires or a sleeping tab resumes. Clearing browser storage, revocation, or other Supabase policies can end a session sooner. Clinical data is not added to browser storage.
+
+Password fields have an accessible Show/Hide control. Completed cases and drafts have confirmed delete actions in archive/recent entries, the reading view and saved-case editor. Cancel does not write to the backend; failures keep the confirmation open for retry. Editor deletion pauses autosave and waits for the outstanding request before deleting, preventing draft recreation. A deletion is reported successful only when PostgreSQL returns the deleted owned record.
+
+Apply all files in `supabase/migrations` in filename order for a fresh project. Supabase-managed Auth schema upgrades can change the session table; rerun the live session checks when upgrading.

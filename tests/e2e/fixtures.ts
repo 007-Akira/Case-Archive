@@ -49,8 +49,14 @@ export async function mockWorkspace(page: Page) {
         },
         headers,
       });
-    if (url.pathname.endsWith("/rpc/has_archive_access"))
-      return route.fulfill({ json: true, headers });
+    if (url.pathname.endsWith("/rpc/archive_session_status"))
+      return route.fulfill({
+        json: {
+          approved: true,
+          expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+        },
+        headers,
+      });
     if (url.pathname.endsWith("/profiles"))
       return route.fulfill({
         json: { id: user.id, display_name: "Test Doctor" },
@@ -78,7 +84,7 @@ export async function mockWorkspace(page: Page) {
       );
       if (request.method() === "DELETE") {
         cases = cases.filter((c) => c.id !== id);
-        return route.fulfill({ status: 204, headers });
+        return route.fulfill({ json: [{ id }], headers });
       }
       if (request.method() === "PATCH") {
         cases = cases.map((c) =>

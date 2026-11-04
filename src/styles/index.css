@@ -1021,3 +1021,39 @@ p {
 .home .quiet-footer {
   margin-top: 24px;
 }
+.password-input {
+  position: relative;
+  display: block;
+}
+.password-input input {
+  padding-right: 48px;
+}
+.password-input .password-toggle {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  height: 40px;
+  color: var(--muted);
+}
+.case-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.compact-case {
+  position: relative;
+  padding-right: 50px;
+}
+.compact-case > .icon-button {
+  position: absolute;
+  right: 5px;
+  top: 8px;
+}
+.compact-case-link {
+  display: block;
+}
+.editor-delete {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 12px;
+}

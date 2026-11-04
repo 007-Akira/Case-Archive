@@ -9,8 +9,9 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import { toast } from "sonner";
-import { getCase, deleteCase, favoriteCase } from "./service";
+import { getCase, favoriteCase } from "./service";
 import { titleOf, numberOf, dateOf, sections, label } from "./model";
+import { DeleteCaseDialog } from "../../components/DeleteCase";
 import { Dialog } from "../../components/ui/dialog";
 export function ReaderPage() {
   const { id } = useParams();
@@ -18,7 +19,6 @@ export function ReaderPage() {
   const client = useQueryClient();
   const [more, setMore] = useState(false);
   const [confirm, setConfirm] = useState(false);
-  const [busy, setBusy] = useState(false);
   const query = useQuery({
     queryKey: ["cases", id],
     queryFn: () => getCase(id!),
@@ -171,35 +171,12 @@ export function ReaderPage() {
           </button>
         </div>
       </Dialog>
-      <Dialog
+      <DeleteCaseDialog
+        record={c}
         open={confirm}
         onOpenChange={setConfirm}
-        title="Delete this case?"
-        description="This permanently deletes the case from your archive. This action cannot be undone."
-      >
-        <div className="row">
-          <button onClick={() => setConfirm(false)}>Cancel</button>
-          <button
-            className="danger"
-            disabled={busy}
-            onClick={async () => {
-              setBusy(true);
-              try {
-                await deleteCase(c.id);
-                await client.invalidateQueries({ queryKey: ["cases"] });
-                navigate("/cases");
-                toast.success("Case deleted");
-              } catch {
-                toast.error("Could not delete case");
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            {busy ? "Deleting…" : "Delete permanently"}
-          </button>
-        </div>
-      </Dialog>
+        onDeleted={() => navigate("/cases")}
+      />
     </div>
   );
 }

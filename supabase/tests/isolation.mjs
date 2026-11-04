@@ -113,5 +113,8 @@ try {
 } finally {
   const result = await b.from("cases").delete().in("id", ids);
   assert.ifError(result.error);
-  await Promise.all([a.auth.signOut(), b.auth.signOut()]);
+  await Promise.all([
+    a.auth.signOut({ scope: "local" }),
+    b.auth.signOut({ scope: "local" }),
+  ]);
 }
