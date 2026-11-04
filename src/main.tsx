@@ -38,6 +38,7 @@ import "@fontsource/newsreader/latin-400.css";
 import "@fontsource/newsreader/latin-500.css";
 import "@fontsource/jetbrains-mono/latin-400.css";
 import "./styles/index.css";
+import { InstallProvider } from "./features/install/InstallApp";
 applyAppearance();
 const client = new QueryClient({
   defaultOptions: {
@@ -118,16 +119,18 @@ const router = createBrowserRouter([
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={client}>
-      <Suspense
-        fallback={
-          <p className="center" role="status">
-            Opening workspace…
-          </p>
-        }
-      >
-        <RouterProvider router={router} />
-      </Suspense>
-      <Toaster richColors position="top-center" />
+      <InstallProvider>
+        <Suspense
+          fallback={
+            <p className="center" role="status">
+              Opening workspace…
+            </p>
+          }
+        >
+          <RouterProvider router={router} />
+        </Suspense>
+        <Toaster richColors position="top-center" />
+      </InstallProvider>
     </QueryClientProvider>
   </React.StrictMode>,
 );

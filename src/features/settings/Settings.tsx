@@ -24,8 +24,10 @@ export function markdown(c: CaseRecord) {
     `\n## Differential diagnoses\n\n${c.differential_diagnoses.map((d) => `- ${d.diagnosis}`).join("\n")}`
   );
 }
+import { useInstallApp } from "../install/InstallApp";
 export function SettingsPage() {
   const { session } = useAuth();
+  const { installed, showInstall } = useInstallApp();
   const client = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -85,6 +87,16 @@ export function SettingsPage() {
     <div className="page settings-page">
       <h1>Settings</h1>
       <p className="muted">Preferences and account management.</p>
+      <section className="settings-section">
+        <h3>Install app</h3>
+        <p className="small muted">
+          Keep Casebook on your home screen or desktop.
+        </p>
+        <button className="primary" disabled={installed} onClick={showInstall}>
+          <Download size={18} />{" "}
+          {installed ? "App installed" : "Install Casebook"}
+        </button>
+      </section>
       <section className="settings-section">
         <div className="row">
           <div>

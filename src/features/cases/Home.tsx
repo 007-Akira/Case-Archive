@@ -6,6 +6,7 @@ import { db } from "../../lib/supabase/client";
 import { defaultFilters, listCases, summary } from "./service";
 import { titleOf, numberOf } from "./model";
 import { CaseCard, QueryState } from "../../components/CaseCard";
+import { InstallSuggestion } from "../install/InstallApp";
 export function HomePage() {
   const { session } = useAuth();
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ export function HomePage() {
   const latest = draft.data?.cases[0];
   return (
     <div className="home page">
+      <InstallSuggestion />
       <div className="page-heading">
         <div>
           <h1>
