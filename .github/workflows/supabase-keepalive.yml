@@ -1,0 +1,39 @@
+name: Supabase backend heartbeat
+
+on:
+  schedule:
+    # UTC: four checks/day, away from the busy start of the hour.
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/supabase-keepalive.yml"]
+
+permissions: {}
+concurrency:
+  group: supabase-backend-heartbeat
+  cancel-in-progress: false
+
+jobs:
+  heartbeat:
+    if: github.repository == '007-Akira/Case-Archive'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - name: Check database without accessing clinical data
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_URL" || { echo 'Missing SUPABASE_URL repository variable'; exit 1; }
+          test -n "$SUPABASE_PUBLISHABLE_KEY" || { echo 'Missing public Supabase key repository variable'; exit 1; }
+          response=$(curl --fail --silent --show-error \
+            --connect-timeout 10 --max-time 20 --retry 2 --retry-delay 5 \
+            --request POST "${SUPABASE_URL%/}/rest/v1/rpc/backend_heartbeat" \
+            --header "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+            --header 'Content-Type: application/json' \
+            --data '{}')
+          test "$response" = 'true' || { echo 'Unexpected database health response'; exit 1; }
+          echo 'Supabase database heartbeat succeeded.'

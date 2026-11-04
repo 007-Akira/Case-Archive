@@ -108,3 +108,11 @@ Sign-in persists through the Supabase session store for up to seven days from th
 Password fields have an accessible Show/Hide control. Completed cases and drafts have confirmed delete actions in archive/recent entries, the reading view and saved-case editor. Cancel does not write to the backend; failures keep the confirmation open for retry. Editor deletion pauses autosave and waits for the outstanding request before deleting, preventing draft recreation. A deletion is reported successful only when PostgreSQL returns the deleted owned record.
 
 Apply all files in `supabase/migrations` in filename order for a fresh project. Supabase-managed Auth schema upgrades can change the session table; rerun the live session checks when upgrading.
+
+## Scheduled backend heartbeat
+
+GitHub Actions runs `.github/workflows/supabase-keepalive.yml` every six hours at minute 17 UTC: **05:47, 11:47, 17:47 and 23:47 Asia/Kolkata**. It can also be run manually from the repository's Actions tab. The external runner works independently of this computer and the website being open.
+
+The job POSTs to `backend_heartbeat()`, an intentionally public `SELECT true` database RPC supplied by `202611040004_backend_heartbeat.sql`. It reads/writes no cases, profiles, sessions or other user records. Only the project URL and public publishable key are used, in repository Actions variables `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`; no account password, database password or service-role key is stored in GitHub. The job needs no checkout, third-party actions or GitHub token permissions, has bounded retries/timeouts, and fails visibly on an unhealthy endpoint. Keep GitHub Actions failure notifications enabled in your GitHub notification settings if you want alerts; email delivery is not configured by this job.
+
+This is best-effort activity and monitoring, not an uptime guarantee. Supabase's Free plan may still pause a project, and GitHub can delay schedules or disable scheduled workflows after 60 days without repository activity in a public repository. Check Actions periodically and re-enable the workflow if necessary. Supabase Pro or another paid plan is the documented way to avoid inactivity pausing. An already-paused project must be resumed in Supabase; a heartbeat cannot unpause it.

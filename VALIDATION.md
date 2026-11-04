@@ -67,3 +67,9 @@ At the user’s request, removed Google OAuth UI, provider checks and related se
 - Added session cutoff, expired cached login, confirmation/cancel/retry, password-toggle, and autosave/delete concurrency coverage.
 
 - Final verification: 38 unit/component tests passed; strict TypeScript and production build passed; all eight live browser scenarios passed sequentially at 320, 390, 768 and 1440px. Live API isolation/concurrent-numbering checks also passed after session-policy application. Integration scenarios sharing one disposable account run sequentially to avoid cross-scenario authentication interference.
+
+## Scheduled heartbeat — 4 November 2026
+
+- Applied `202611040004_backend_heartbeat.sql` and verified its anonymous invocation succeeds while anonymous SELECT privilege on cases remains denied.
+- Configured only the project URL and public publishable key as GitHub Actions repository variables; Actions is enabled.
+- Added four-per-day external health checks, bounded retries/timeouts and a manual trigger. Scheduled execution remains subject to GitHub/Supabase availability and public-repository inactivity policies.

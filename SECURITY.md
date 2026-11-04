@@ -30,3 +30,7 @@ Cloudflare is the preferred fit for the static Vite frontend. Supabase remains t
 ## Seven-day archive sessions
 
 The archive now enforces a seven-day absolute session limit through the authoritative Supabase session ID and creation time. Short JWT lifetimes remain in place. Revoked/missing or expired sessions cannot use the archive even if the browser attempts to retain or refresh tokens. Client expiry timers and focus checks clear the workspace and require reauthentication; a warning prompts users to save before the cutoff. This policy does not claim to alter Supabase project-wide Auth settings.
+
+## Data-free scheduled health check
+
+`backend_heartbeat()` is deliberately callable by anonymous/public-key requests but only returns `true`. It is SECURITY INVOKER, has an empty search path and accesses no tables or user information. All case/profile/member/session protections remain unchanged. Its external GitHub workflow uses only public configuration, no user sign-in or privileged credentials, and no repository token permissions. It is a health/activity check, not a backup job or an uptime guarantee.
