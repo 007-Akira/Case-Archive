@@ -8,6 +8,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Brand } from "../Brand";
 const items = [
   { to: "/", label: "Home", icon: Home },
   { to: "/cases", label: "My Cases", icon: BookOpen },
@@ -31,19 +32,13 @@ export function AppShell() {
         Skip to content
       </a>
       <header className="topbar">
-        <Link to="/" className="brand">
-          <i />
-          Casebook
-        </Link>
+        <Brand />
         <Link className="avatar" to="/settings" aria-label="Your profile">
           <UserRound size={18} />
         </Link>
       </header>
       <aside className="sidebar">
-        <Link to="/" className="brand">
-          <i />
-          Casebook
-        </Link>
+        <Brand />
         <p className="eyebrow">PERSONAL CLINICAL ARCHIVE</p>
         <nav>
           {items.map(({ to, label, icon: Icon }) => (

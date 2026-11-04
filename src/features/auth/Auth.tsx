@@ -16,6 +16,7 @@ import {
 } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PasswordInput } from "../../components/ui/PasswordInput";
+import { Brand } from "../../components/Brand";
 import { toast } from "sonner";
 import { sessionExpired, type ArchiveSessionStatus } from "./session";
 import { Captcha, captchaConfigured } from "./Captcha";
@@ -223,10 +224,7 @@ export function AuthPage() {
   }
   return (
     <div className="auth-page">
-      <Link to="/" className="brand">
-        <i />
-        Casebook
-      </Link>
+      <Brand />
       <section className="auth-card">
         <span className="eyebrow">YOUR PERSONAL CLINICAL ARCHIVE</span>
         <h1>
