@@ -13,13 +13,15 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Captcha, captchaConfigured } from "./Captcha";
 import { supabase, db, configured } from "../../lib/supabase/client";
 const Context = createContext<{
   session: Session | null;
   loading: boolean;
   error: string;
-}>({ session: null, loading: true, error: "" });
+  approved: boolean;
+}>({ session: null, loading: true, error: "", approved: false });
 export const useAuth = () => useContext(Context);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -59,20 +61,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data.subscription.unsubscribe();
     };
   }, [client]);
+  const access = useQuery({
+    queryKey: ["archive-access", session?.user.id],
+    enabled: Boolean(session),
+    queryFn: async () => {
+      const { data, error } = await db().rpc("has_archive_access");
+      if (error) throw error;
+      return data === true;
+    },
+    retry: 1,
+  });
   return (
-    <Context.Provider value={{ session, loading, error }}>
+    <Context.Provider
+      value={{
+        session,
+        loading: loading || Boolean(session && access.isPending),
+        error:
+          error ||
+          (access.error
+            ? "Unable to verify archive access. Please reload to retry."
+            : ""),
+        approved: access.data === true,
+      }}
+    >
       {children}
     </Context.Provider>
   );
 }
 export function ProtectedRoute() {
-  const { session, loading, error } = useAuth();
+  const { session, loading, error, approved } = useAuth();
   if (loading) return <p className="center">Opening your workspace…</p>;
   if (error)
     return (
       <p role="alert" className="center">
         {error}
       </p>
+    );
+  if (session && !approved)
+    return (
+      <div className="center">
+        <h1>Access needs approval.</h1>
+        <p>
+          Your account has not been approved for this private archive. Contact
+          your administrator.
+        </p>
+        <button onClick={() => void db().auth.signOut()}>Sign out</button>
+      </div>
     );
   return session ? <Outlet /> : <Navigate to="/login" replace />;
 }
@@ -85,6 +119,8 @@ export function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaKey, setCaptchaKey] = useState(0);
   if (session && !forgot && !reset) return <Navigate to="/" replace />;
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -92,10 +128,15 @@ export function AuthPage() {
     setError("");
     const f = new FormData(e.currentTarget);
     try {
+      if (!reset && captchaConfigured && !captchaToken)
+        throw new Error("Please complete security verification.");
       if (forgot) {
         const { error } = await db().auth.resetPasswordForEmail(
           String(f.get("email")),
-          { redirectTo: `${window.location.origin}/reset-password` },
+          {
+            redirectTo: `${window.location.origin}/reset-password`,
+            ...(captchaConfigured ? { captchaToken } : {}),
+          },
         );
         if (error) throw error;
         setSent(true);
@@ -110,6 +151,7 @@ export function AuthPage() {
         const { error } = await db().auth.signInWithPassword({
           email: String(f.get("email")),
           password: String(f.get("password")),
+          ...(captchaConfigured ? { options: { captchaToken } } : {}),
         });
         if (error) throw error;
         navigate("/");
@@ -121,6 +163,8 @@ export function AuthPage() {
           : "Unable to sign in. Please try again.",
       );
     } finally {
+      setCaptchaToken("");
+      setCaptchaKey((key) => key + 1);
       setBusy(false);
     }
   }
@@ -193,6 +237,15 @@ export function AuthPage() {
                   required
                 />
               </label>
+            )}
+            {!reset && captchaConfigured && (
+              <Captcha
+                key={captchaKey}
+                onToken={setCaptchaToken}
+                onError={() =>
+                  setError("Security verification failed. Reload to retry.")
+                }
+              />
             )}
             {error && (
               <p role="alert" className="error">

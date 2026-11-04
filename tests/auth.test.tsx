@@ -16,6 +16,7 @@ const auth = vi.hoisted(() => ({
   signInWithPassword: vi
     .fn()
     .mockResolvedValue({ error: new Error("Invalid login credentials") }),
+  updateUser: vi.fn().mockResolvedValue({ error: null }),
   resetPasswordForEmail: vi.fn().mockResolvedValue({ error: null }),
 }));
 vi.mock("../src/lib/supabase/client", () => ({
@@ -37,6 +38,7 @@ function mount(path = "/login") {
           <Routes>
             <Route path="/login" element={<AuthPage />} />
             <Route path="/forgot-password" element={<AuthPage />} />
+            <Route path="/reset-password" element={<AuthPage />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<p>Private workspace</p>} />
             </Route>
@@ -84,5 +86,47 @@ it("shows non-enumerating recovery confirmation", async () => {
   );
   expect(await screen.findByRole("status")).toHaveTextContent(
     "If an authorized account exists",
+  );
+});
+
+it("validates password confirmation before sending an update", async () => {
+  mount("/reset-password");
+  await waitFor(() =>
+    expect(
+      screen.getByRole("button", { name: "Update password" }),
+    ).toBeEnabled(),
+  );
+  fireEvent.change(screen.getByLabelText("New password"), {
+    target: { value: "New-example-password1" },
+  });
+  fireEvent.change(screen.getByLabelText("Confirm password"), {
+    target: { value: "Different-password12" },
+  });
+  fireEvent.submit(
+    screen.getByRole("button", { name: "Update password" }).closest("form")!,
+  );
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Passwords must match.",
+  );
+  expect(auth.updateUser).not.toHaveBeenCalled();
+});
+it("updates the password through Supabase for a recovery form", async () => {
+  mount("/reset-password");
+  await waitFor(() =>
+    expect(
+      screen.getByRole("button", { name: "Update password" }),
+    ).toBeEnabled(),
+  );
+  for (const name of ["New password", "Confirm password"])
+    fireEvent.change(screen.getByLabelText(name), {
+      target: { value: "New-example-password1" },
+    });
+  fireEvent.submit(
+    screen.getByRole("button", { name: "Update password" }).closest("form")!,
+  );
+  await waitFor(() =>
+    expect(auth.updateUser).toHaveBeenCalledWith({
+      password: "New-example-password1",
+    }),
   );
 });

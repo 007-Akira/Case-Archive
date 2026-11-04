@@ -49,6 +49,8 @@ export async function mockWorkspace(page: Page) {
         },
         headers,
       });
+    if (url.pathname.endsWith("/rpc/has_archive_access"))
+      return route.fulfill({ json: true, headers });
     if (url.pathname.endsWith("/profiles"))
       return route.fulfill({
         json: { id: user.id, display_name: "Test Doctor" },

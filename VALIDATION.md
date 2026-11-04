@@ -22,3 +22,40 @@ HTTP fixtures exist only inside the browser tests. The application never switche
 The audit advisories concern transitive build-time glob/minimatch, template and merge dependencies. The audit's suggested forced change downgrades the current PWA plugin across a major version; this was not applied blindly. Review upstream updates before production deployment. The app has no server-side template engine or user-supplied build inputs.
 
 Remaining configuration: create Supabase project, apply SQL, disable public signups, provision authorized accounts, set `.env` public URL/key, configure recovery redirect URLs and SMTP, and run the live disposable-account tests described in README. Installation / Add to Home Screen UI varies by browser; the native install prompt itself was not automated. Secure offline clinical editing and cross-device edit conflict resolution are not implemented.
+
+## Live Supabase verification — 4 November 2026
+
+The local environment is now configured with the supplied project URL and public publishable key. The database password was used through hidden process input only; it was not written to the repository or frontend.
+
+- Applied `202611020001_casebook.sql` successfully using a TLS connection with verified Supabase CA and hostname.
+- Confirmed RLS is enabled on profiles, cases, and case_counters.
+- Passed rollback-only database checks for own-user CRUD, completion constraints, retry identity, cross-user access denial, profile isolation, counter denial and immutable ownership. Temporary test records and users were rolled back.
+- Provisioned two disposable, confirmed random-email test accounts at the user's request. Generated credentials are stored only in ignored `.env.test` with permissions 0600; the database password is not stored there. These `.invalid` addresses cannot receive password-recovery email.
+- Passed the real API `supabase/tests/isolation.mjs` checks, including concurrent numbering and retry stability. Its created cases were cleaned up.
+- Passed all four real browser case lifecycle tests at 320, 390, 768 and 1440px: login, draft saving, completion, favorites and deletion.
+
+These live results supersede the earlier "not executed" entries for database application, real CRUD, RLS and concurrent numbering. Password recovery email delivery and actual installation prompts remain unverified.
+
+Remaining dashboard configuration: public signup was observed enabled and must be disabled under Authentication; configure the local `/reset-password` redirect and production URLs/SMTP when deploying. Database credentials and a publishable key cannot change project-level Auth configuration through the Management API. Replace disposable accounts with an authorized real-email account before normal use.
+
+## Approved accounts and mixed sign-in — 4 November 2026
+
+- Created and confirmed the specifically requested real-email account; verified its supplied password using Supabase Auth and verified approved archive access. Its password was passed through hidden process input and was not saved in source or environment files.
+- Reused the two previously provisioned disposable accounts for development and isolation tests; local credentials remain in ignored `.env.test`.
+- Applied `202611040001_approved_archive_access.sql`. Membership starts empty in the migration. Deployment approved only the requested real account and the two exact existing test accounts; no blanket approval of other users was performed.
+- Added backend-enforced approval policies and a frontend access check, plus a Google OAuth action gated by actual Supabase provider availability.
+- Real API isolation/concurrent-numbering verification passed again. All four real browser case lifecycle tests passed again after the approval migration.
+- TypeScript and production build pass. Build reports a JavaScript chunk-size advisory.
+- Google provider activation/consent and recovery email delivery remain unverified and require dashboard configuration. No emails were sent during account provisioning or verification. Public signup should still be disabled in dashboard; the backend approval gate independently prevents unapproved accounts from using the archive.
+- Additional rollback-only database check passed: an unapproved authenticated account could not read cases/profiles or insert its own case; explicit admin membership enabled access. A reproducible version is in `supabase/tests/approval.sql`.
+
+## Email/password-only update — 4 November 2026
+
+At the user’s request, removed Google OAuth UI, provider checks and related setup requirements. Admin approval, email/password login and Supabase email recovery remain. Gmail can receive the recovery link; changing a Gmail password does not change the Casebook password. Recovery delivery still requires the Supabase email/redirect configuration noted above.
+
+## Security preparation and private test launch — 4 November 2026
+
+- Added Cloudflare/Vercel security-header and SPA routing configuration; actual host response verification remains required.
+- Added optional Turnstile login/recovery integration; no site key or server CAPTCHA configuration is assumed.
+- Applied and directly tested the five-attempt/15-minute password-verification hook, including expiry and no browser execution permissions. Supabase Auth hook activation remains pending; this is not represented as active brute-force protection.
+- See SECURITY.md for the exact remaining project settings and launch boundaries.

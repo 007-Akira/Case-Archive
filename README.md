@@ -80,3 +80,23 @@ The script verifies cross-user read/update/delete/insert denial, profile isolati
 No Supabase credentials are included. Live Auth, email delivery, migration application and RLS verification require your configured project. See `VALIDATION.md` for actual execution results.
 
 The PWA browser test runs against the production build and verifies manifest icons, active service-worker control, cached URL privacy and offline app-shell navigation. Build first.
+
+## Approved accounts and password recovery
+
+Apply both SQL migrations in order. `202611040001_approved_archive_access.sql` adds a private, RLS-enabled membership table and restrictive policies. Its membership table starts empty: existing and newly created Auth accounts require explicit approval. Public signup, if accidentally left enabled, cannot grant archive access. The UI also checks approval through the non-enumerating `has_archive_access` RPC.
+
+For each person you authorize, first use Supabase Authentication → Users → Add user to create a confirmed email/password account. Then run this **admin-only SQL** in the dashboard, replacing the example address:
+
+```sql
+insert into casebook_private.archive_members (user_id)
+select id from auth.users where lower(email) = lower('approved-person@example.com')
+on conflict do nothing;
+```
+
+To revoke archive access, delete that user's membership through the SQL editor. Never expose this table or privileged administration in browser code. The client has no permission to read or edit membership. Disable public signup in Auth settings as well.
+
+Login uses email and password only. Google OAuth is not enabled or required.
+
+The Forgot password flow is available to real-email accounts. Configure production SMTP and allow `http://localhost:5173/reset-password` (plus the deployed URL) in Supabase's redirects. Localhost links work only on the device running the app, so an externally accessible HTTPS deployment is needed for another person's recovery link. No recovery email is sent during provisioning. Email delivery requires dashboard configuration and have not been verified merely by creating an account.
+
+Gmail receives recovery emails for Gmail addresses; Casebook passwords remain separate from Google/Gmail passwords.
