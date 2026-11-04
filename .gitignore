@@ -6,3 +6,6 @@ dist/
 playwright-report/
 test-results/
 *.tsbuildinfo
+.wrangler/
+.dev.vars
+.dev.vars.*

@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "casebook-archive",
+  "account_id": "9f7b4f2adc9c0f58193c6ade53ee30cd",
+  "main": "dist/server/index.js",
+  "compatibility_date": "2026-11-04",
+  "workers_dev": true,
+  "preview_urls": false,
+  "upload_source_maps": false,
+  "observability": { "enabled": false },
+}

@@ -11,7 +11,9 @@
     "typecheck": "tsc -b",
     "format": "prettier --write src tests vite.config.ts playwright.config.ts",
     "preview": "vite preview --host 127.0.0.1",
-    "test:pwa": "playwright test --config playwright.pwa.config.ts"
+    "test:pwa": "playwright test --config playwright.pwa.config.ts",
+    "deploy:cloudflare": "npm run build && wrangler deploy",
+    "check:cloudflare": "npm run build && wrangler deploy --dry-run"
   },
   "dependencies": {
     "@fontsource/geist": "5.3.0",
@@ -48,6 +50,7 @@
     "typescript": "7.0.2",
     "vite": "8.3.5",
     "vite-plugin-pwa": "2.0.0",
-    "vitest": "5.0.5"
+    "vitest": "5.0.5",
+    "wrangler": "4.157.0"
   }
 }
