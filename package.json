@@ -13,7 +13,8 @@
     "preview": "vite preview --host 127.0.0.1",
     "test:pwa": "playwright test --config playwright.pwa.config.ts",
     "deploy:cloudflare": "npm run build && wrangler deploy",
-    "check:cloudflare": "npm run build && wrangler deploy --dry-run"
+    "check:cloudflare": "npm run build && wrangler deploy --dry-run",
+    "deploy:pages": "npm run build && node scripts/build-pages.mjs && wrangler pages deploy .pages-dist --project-name casebook-archive --branch main --force"
   },
   "dependencies": {
     "@fontsource/geist": "5.3.0",

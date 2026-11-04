@@ -83,3 +83,7 @@ At the user’s request, removed Google OAuth UI, provider checks and related se
 - Production PWA test passed against Cloudflare: manifest, service-worker control, API-cache exclusion and offline shell.
 - Strict TypeScript and all 38 unit/component tests passed after adding reproducible Cloudflare deployment and external-host test configuration.
 - Supabase production recovery redirect/SMTP and pending Auth protection activation still require dashboard configuration; deployment does not imply these have been enabled.
+
+## Free Pages address — 4 November 2026
+
+Published the existing hardened Worker in Pages advanced mode at https://casebook-archive.pages.dev, removing the personal account name from the primary URL. Verified HTTPS, CSP response headers, real Supabase sign-in using a disposable approved account, and the production manifest/service-worker/offline-shell Playwright check (1 passed). The Supabase backend is unchanged. Existing PWA installations and browser sessions belong to the old origin; sign in and install from the new address. Password recovery still requires the new origin and `/reset-password` redirect in Supabase configuration.

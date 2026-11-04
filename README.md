@@ -1,6 +1,6 @@
 # Casebook — Personal Clinical Case Archive
 
-Live on Cloudflare: **https://casebook-archive.keshappan.workers.dev**. See [CLOUDFLARE.md](CLOUDFLARE.md) for deployment and production redirect configuration.
+Live on Cloudflare: **https://casebook-archive.pages.dev**. See [CLOUDFLARE.md](CLOUDFLARE.md) for deployment and production redirect configuration.
 
 Private, invite-only React / TypeScript / Vite PWA backed by Supabase Auth and PostgreSQL. The supplied five-screen Stitch reference is preserved in `stitch-reference.html`. No demo cases or simulated backend are used.
 
