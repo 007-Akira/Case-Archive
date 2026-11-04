@@ -1,4 +1,10 @@
 import { test, expect } from "@playwright/test";
+// Installation is covered separately; keep archive workflows focused on cases.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    sessionStorage.setItem("casebook-install-offered", "true");
+  });
+});
 test("private archive redirects to login without horizontal overflow", async ({
   page,
 }) => {

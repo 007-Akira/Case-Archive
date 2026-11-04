@@ -87,3 +87,9 @@ At the user’s request, removed Google OAuth UI, provider checks and related se
 ## Free Pages address — 4 November 2026
 
 Published the existing hardened Worker in Pages advanced mode at https://casebook-archive.pages.dev, removing the personal account name from the primary URL. Verified HTTPS, CSP response headers, real Supabase sign-in using a disposable approved account, and the production manifest/service-worker/offline-shell Playwright check (1 passed). The Supabase backend is unchanged. Existing PWA installations and browser sessions belong to the old origin; sign in and install from the new address. Password recovery still requires the new origin and `/reset-password` redirect in Supabase configuration.
+
+## PWA install controls — 4 November 2026
+
+Added Settings → Install Casebook and a first-dashboard-visit installation offer once per browser session. Captures `beforeinstallprompt` before authenticated views mount, invokes the native prompt only from a user click, consumes each event once, and updates the UI on `appinstalled` or standalone display mode. Safari/iPhone receives manual Add to Home Screen instructions. Dismissal leaves installation accessible through Settings.
+
+Validation: production TypeScript/build passed; 41 unit tests passed, including three installation lifecycle tests. Live Pages browser checks verified the automatic offer, dismissal surviving reload, Settings reopening, native-event handoff and installed state with simulated browser events, and iPhone instructions with an emulated user agent. Live manifest/service-worker/offline-shell test passed. Actual OS installation and Safari Share-sheet actions require a device/browser user confirmation and were not automated.
