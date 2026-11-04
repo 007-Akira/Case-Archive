@@ -17,7 +17,8 @@ type InstallEvent = Event & {
 const Context = createContext({ installed: false, showInstall: () => {} });
 export const useInstallApp = () => useContext(Context);
 const standalone = () =>
-  window.matchMedia("(display-mode: standalone)").matches ||
+  window.matchMedia("(display-mode: standalone), (display-mode: fullscreen)")
+    .matches ||
   Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
 
 export function InstallProvider({ children }: { children: ReactNode }) {
@@ -30,7 +31,9 @@ export function InstallProvider({ children }: { children: ReactNode }) {
     /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   useEffect(() => {
-    const media = window.matchMedia("(display-mode: standalone)");
+    const media = window.matchMedia(
+      "(display-mode: standalone), (display-mode: fullscreen)",
+    );
     const update = () => setInstalled(standalone());
     const ready = (event: Event) => {
       event.preventDefault();

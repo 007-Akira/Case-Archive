@@ -12,12 +12,17 @@ export default defineConfig({
         name: "Casebook — Personal Clinical Case Archive",
         short_name: "Casebook",
         description: "Private clinical case documentation",
-        theme_color: "#484C80",
+        theme_color: "#F8F9FE",
         background_color: "#F8F9FE",
-        display: "standalone",
+        display: "fullscreen",
+        display_override: ["fullscreen", "standalone"],
         start_url: "/",
         icons: [
-          { src: "/icons/casebook-192.png", sizes: "192x192", type: "image/png" },
+          {
+            src: "/icons/casebook-192.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
           {
             src: "/icons/casebook-512.png",
             sizes: "512x512",

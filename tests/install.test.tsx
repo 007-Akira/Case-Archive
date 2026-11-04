@@ -23,6 +23,32 @@ function SettingsButton() {
 beforeEach(() => sessionStorage.clear());
 afterEach(cleanup);
 describe("PWA installation", () => {
+  it("recognizes fullscreen launches as installed and suppresses the offer", () => {
+    const media = vi
+      .spyOn(window, "matchMedia")
+      .mockImplementation((query) => ({
+        matches: query.includes("display-mode: fullscreen"),
+        media: query,
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }));
+    try {
+      render(
+        <InstallProvider>
+          <InstallSuggestion />
+          <SettingsButton />
+        </InstallProvider>,
+      );
+      expect(screen.getByText("App installed")).toBeDisabled();
+      expect(screen.queryByRole("dialog")).toBeNull();
+    } finally {
+      media.mockRestore();
+    }
+  });
   it("offers after dashboard entry once per session, with settings available after dismissal", () => {
     const view = render(
       <InstallProvider>
@@ -59,9 +85,7 @@ describe("PWA installation", () => {
     });
     expect(event.defaultPrevented).toBe(true);
     fireEvent.click(screen.getByText("Install Casebook"));
-    fireEvent.click(
-      screen.getByRole("button", { name: /^Install app$/ }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: /^Install app$/ }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(prompt).toHaveBeenCalledTimes(1);
     expect(screen.getByText("Install Casebook")).not.toBeDisabled();
@@ -86,9 +110,7 @@ describe("PWA installation", () => {
       window.dispatchEvent(event);
     });
     fireEvent.click(screen.getByText("Install Casebook"));
-    fireEvent.click(
-      screen.getByRole("button", { name: /^Install app$/ }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: /^Install app$/ }));
     await waitFor(() =>
       expect(
         screen.queryByRole("button", { name: /^Install app$/ }),

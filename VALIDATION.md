@@ -99,3 +99,7 @@ Validation: production TypeScript/build passed; 41 unit tests passed, including 
 A recovery verification probe with a deliberately invalid token and an explicit Pages `/reset-password` redirect returned HTTP 303 to `http://localhost:3000/` with `otp_expired`. The previous Workers origin also fell back to localhost. No real recovery token was consumed and no email was sent by this diagnostic. Supabase's project-level Site URL / redirect allowlist remains a dashboard configuration requirement; current database and public API credentials cannot update it.
 
 Improved reset-page handling: waits for session initialization, rejects missing recovery sessions and expired-link errors with a new-link action, avoids reloading an already-open reset route on PASSWORD_RECOVERY, and confirms successful updates. All 43 unit tests and production TypeScript/build passed. The actual Gmail-delivered recovery flow remains pending the dashboard URL correction and a fresh email link.
+
+## Fullscreen installed PWA — 4 November 2026
+
+Manifest now prefers `fullscreen` with `standalone` fallback. Added iOS web-app/edge-to-edge metadata, full viewport backgrounds, safe-area-aware content offsets, and theme-color synchronization with appearance. Fullscreen launches count as installed, preventing another installation offer. Production build/type checking and 44 unit tests passed. Hiding device status/navigation bars remains controlled by the installed browser/OS; iOS may retain status icons. Physical-device immersive behavior is not emulated by viewport screenshots.

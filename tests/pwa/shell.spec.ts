@@ -9,7 +9,8 @@ test("production manifest, service worker and offline shell contain no API cache
   ).toBeVisible();
   const manifest = await page.request.get("/manifest.webmanifest");
   const data = await manifest.json();
-  expect(data.display).toBe("standalone");
+  expect(data.display).toBe("fullscreen");
+  expect(data.display_override).toEqual(["fullscreen", "standalone"]);
   expect(data.icons.map((i: { sizes: string }) => i.sizes)).toEqual(
     expect.arrayContaining(["192x192", "512x512"]),
   );
