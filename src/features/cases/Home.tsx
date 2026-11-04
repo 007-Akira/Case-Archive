@@ -31,7 +31,6 @@ export function HomePage() {
     <div className="home page">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">YOUR CLINICAL WORKSPACE</p>
           <h1>
             Hello
             {profile.data?.display_name
@@ -39,7 +38,6 @@ export function HomePage() {
               : ""}
             .
           </h1>
-          <p className="muted">Every case is a lesson worth keeping.</p>
         </div>
         <Link className="button primary" to="/cases/new">
           <Plus size={18} />
@@ -110,9 +108,6 @@ export function HomePage() {
           <CaseCard key={c.id} c={c} compact />
         ))}
       </div>
-      <p className="quiet-footer">
-        A little reflection turns experience into understanding.
-      </p>
     </div>
   );
 }

@@ -2,9 +2,8 @@ import { Link } from "react-router-dom";
 
 export function Brand() {
   return (
-    <Link to="/" className="brand">
-      <img src="/icons/casebook-192.png" alt="" width={32} height={32} />
-      Casebook
+    <Link to="/" className="brand" aria-label="Casebook home">
+      <img src="/icons/casebook-192.png" alt="Casebook" width={40} height={40} />
     </Link>
   );
 }

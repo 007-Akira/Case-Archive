@@ -171,8 +171,8 @@ p {
   letter-spacing: -0.5px;
 }
 .brand img {
-  height: 32px;
-  width: 32px;
+  height: 40px;
+  width: 40px;
   flex-shrink: 0;
   border-radius: 7px;
 }

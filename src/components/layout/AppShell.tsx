@@ -39,7 +39,6 @@ export function AppShell() {
       </header>
       <aside className="sidebar">
         <Brand />
-        <p className="eyebrow">PERSONAL CLINICAL ARCHIVE</p>
         <nav>
           {items.map(({ to, label, icon: Icon }) => (
             <NavLink key={to} to={to} end>
@@ -48,11 +47,6 @@ export function AppShell() {
             </NavLink>
           ))}
         </nav>
-        <p className="sidebar-note">
-          Experience, thoughtfully
-          <br />
-          documented.
-        </p>
       </aside>
       <main id="content" className="workspace">
         {!online && (
