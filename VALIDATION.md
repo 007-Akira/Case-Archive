@@ -73,3 +73,13 @@ At the user’s request, removed Google OAuth UI, provider checks and related se
 - Applied `202611040004_backend_heartbeat.sql` and verified its anonymous invocation succeeds while anonymous SELECT privilege on cases remains denied.
 - Configured only the project URL and public publishable key as GitHub Actions repository variables; Actions is enabled.
 - Added four-per-day external health checks, bounded retries/timeouts and a manual trigger. Scheduled execution remains subject to GitHub/Supabase availability and public-repository inactivity policies.
+
+## Direct Cloudflare launch — 4 November 2026
+
+- Deployed `casebook-archive` to https://casebook-archive.keshappan.workers.dev in the authorized Cloudflare account. Worker version: `55997603-8612-4447-aab0-4bd95d650280`.
+- Production build and Wrangler upload validation passed (approximately 622 KiB gzip). Request observability and source-map upload are disabled; no runtime secret/database binding is deployed with the static frontend.
+- Verified HTTPS 200 and explicit CSP, framing denial and nosniff headers on login, SPA routes, manifest and service worker.
+- All eight live browser workflows passed against Cloudflare at 320, 390, 768 and 1440px using the disposable account. Created test records were deleted by the workflows.
+- Production PWA test passed against Cloudflare: manifest, service-worker control, API-cache exclusion and offline shell.
+- Strict TypeScript and all 38 unit/component tests passed after adding reproducible Cloudflare deployment and external-host test configuration.
+- Supabase production recovery redirect/SMTP and pending Auth protection activation still require dashboard configuration; deployment does not imply these have been enabled.
