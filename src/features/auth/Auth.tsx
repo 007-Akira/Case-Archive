@@ -19,6 +19,7 @@ import { PasswordInput } from "../../components/ui/PasswordInput";
 import { Brand } from "../../components/Brand";
 import { toast } from "sonner";
 import { sessionExpired, type ArchiveSessionStatus } from "./session";
+import { recoveryLinkError } from "./recovery";
 import { Captcha, captchaConfigured } from "./Captcha";
 import { supabase, db, configured } from "../../lib/supabase/client";
 const Context = createContext<{
@@ -66,7 +67,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data } = supabase.auth.onAuthStateChange((event, s) => {
       acceptSession(s);
       setLoading(false);
-      if (event === "PASSWORD_RECOVERY")
+      if (
+        event === "PASSWORD_RECOVERY" &&
+        window.location.pathname !== "/reset-password"
+      )
         window.location.replace("/reset-password");
     });
     return () => {
@@ -171,7 +175,10 @@ export function AuthPage() {
   const forgot = location.pathname === "/forgot-password";
   const reset = location.pathname === "/reset-password";
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [linkError] = useState(() =>
+    recoveryLinkError(location.search, location.hash),
+  );
+  const [error, setError] = useState(linkError);
   const [sent, setSent] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaKey, setCaptchaKey] = useState(0);
@@ -200,6 +207,7 @@ export function AuthPage() {
           throw new Error("Passwords must match.");
         const { error } = await db().auth.updateUser({ password });
         if (error) throw error;
+        toast.success("Password updated.");
         navigate("/");
       } else {
         const { error } = await db().auth.signInWithPassword({
@@ -247,7 +255,19 @@ export function AuthPage() {
             .env, then restart the app. No demo backend is enabled.
           </div>
         )}
-        {sent ? (
+        {reset && loading ? (
+          <p role="status">Checking your recovery link…</p>
+        ) : reset && (!session || Boolean(linkError)) ? (
+          <div>
+            <p role="alert" className="error">
+              {linkError ||
+                "Open the latest password recovery link from your email to set a new password."}
+            </p>
+            <Link className="button primary" to="/forgot-password">
+              Request a new recovery link
+            </Link>
+          </div>
+        ) : sent ? (
           <p role="status">
             If an authorized account exists for that address, a recovery email
             will arrive shortly.

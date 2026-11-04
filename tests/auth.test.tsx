@@ -96,6 +96,16 @@ it("shows non-enumerating recovery confirmation", async () => {
 });
 
 it("validates password confirmation before sending an update", async () => {
+  auth.getSession.mockResolvedValueOnce({
+    data: { session: { user: { id: "recovery-user" } } },
+  });
+  rpc.mockResolvedValueOnce({
+    data: {
+      approved: true,
+      expires_at: new Date(Date.now() + 3600000).toISOString(),
+    },
+    error: null,
+  });
   mount("/reset-password");
   await waitFor(() =>
     expect(
@@ -117,6 +127,16 @@ it("validates password confirmation before sending an update", async () => {
   expect(auth.updateUser).not.toHaveBeenCalled();
 });
 it("updates the password through Supabase for a recovery form", async () => {
+  auth.getSession.mockResolvedValueOnce({
+    data: { session: { user: { id: "recovery-user" } } },
+  });
+  rpc.mockResolvedValueOnce({
+    data: {
+      approved: true,
+      expires_at: new Date(Date.now() + 3600000).toISOString(),
+    },
+    error: null,
+  });
   mount("/reset-password");
   await waitFor(() =>
     expect(
@@ -168,4 +188,25 @@ it("requires sign-in when a cached session has exceeded seven days", async () =>
     expect(auth.signOut).toHaveBeenCalledWith({ scope: "local" }),
   );
   expect(screen.queryByText("Private workspace")).not.toBeInTheDocument();
+});
+
+it("rejects a reset page without a recovery session", async () => {
+  mount("/reset-password");
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Open the latest password recovery link",
+  );
+  expect(screen.queryByRole("button", { name: "Update password" })).toBeNull();
+  expect(
+    screen.getByRole("link", { name: "Request a new recovery link" }),
+  ).toHaveAttribute("href", "/forgot-password");
+});
+it("explains expired recovery links without exposing URL error text", async () => {
+  mount(
+    "/reset-password#error=access_denied&error_code=otp_expired&error_description=untrusted",
+  );
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "expired or has already been used",
+  );
+  expect(screen.queryByText("untrusted")).toBeNull();
+  expect(auth.updateUser).not.toHaveBeenCalled();
 });
