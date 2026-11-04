@@ -245,7 +245,7 @@ p {
   gap: 4px;
   font-size: 10px;
   min-width: 56px;
-  min-height: 48px;
+  min-height: 56px;
   color: var(--muted);
   justify-content: center;
 }
@@ -253,12 +253,18 @@ p {
   color: var(--accent);
   font-weight: 600;
 }
+.bottom-nav a > span:first-child {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+}
 .new-icon {
-  margin-top: -16px;
+  margin-top: 0;
   background: var(--accent);
   color: #fff;
-  width: 42px;
-  height: 42px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -1056,4 +1062,32 @@ p {
   display: flex;
   justify-content: flex-end;
   margin: 0 0 12px;
+}
+
+@media (max-width: 639px) {
+  .page-heading {
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .page-heading > div {
+    min-width: 0;
+  }
+  .page-heading .button {
+    flex-shrink: 0;
+    min-height: 44px;
+    padding: 8px 10px;
+    font-size: 12px;
+    gap: 5px;
+  }
+  .page-heading .button svg {
+    width: 16px;
+    height: 16px;
+  }
+  .home .page-heading .button {
+    margin-top: 18px;
+  }
+  .bottom-nav .new-icon svg {
+    width: 20px;
+    height: 20px;
+  }
 }
