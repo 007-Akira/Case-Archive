@@ -175,9 +175,13 @@ export function AuthPage() {
   const forgot = location.pathname === "/forgot-password";
   const reset = location.pathname === "/reset-password";
   const [busy, setBusy] = useState(false);
-  const [linkError] = useState(() =>
+  const [linkError, setLinkError] = useState(() =>
     recoveryLinkError(location.search, location.hash),
   );
+  useEffect(() => {
+    const message = recoveryLinkError(location.search, location.hash);
+    if (message) setLinkError(message);
+  }, [location.search, location.hash]);
   const [error, setError] = useState(linkError);
   const [sent, setSent] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
